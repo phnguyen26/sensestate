@@ -10,7 +10,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   ##
+    allow_origins=["https://sensestate.vercel.app"],   ##
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -18,7 +18,7 @@ app.add_middleware(
 app.include_router(api.router)  
 
 
-app.mount("/home", StaticFiles(directory="frontend", html=True), name="ui")
+app.mount("/", StaticFiles(directory="frontend", html=True), name="ui")
 
 
 
