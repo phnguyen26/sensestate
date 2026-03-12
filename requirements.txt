@@ -1,0 +1,17 @@
+# API Server
+fastapi
+uvicorn[standard]
+pydantic
+
+# Vector Database
+qdrant-client
+
+# LLM
+openai
+
+# Web Scraping
+selenium
+undetected-chromedriver
+
+# Environment Variables
+python-dotenv
