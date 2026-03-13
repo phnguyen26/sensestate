@@ -43,7 +43,9 @@ def preprocessing(data: Data) -> Processed_Data:
         price_unit = 'tỷ'
         new_price = float(price.split('tỷ')[0].strip().replace(',', '.'))
     elif 'triệu' in price:
-        price_unit = 'triệu/tháng'
+        if 'tháng' in price:
+            price_unit = 'triệu/tháng'
+        else: price_unit = 'triệu/m²'
         new_price = float(price.split('triệu')[0].strip().replace(',', '.'))
     else:
         price_unit = 'Thỏa thuận'

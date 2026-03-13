@@ -1,7 +1,7 @@
 
 
 var propertySlide = async () => {
-  const res = await fetch("http://127.0.0.1:8000/api/data");
+  const res = await fetch("/api/data");
   const data = await res.json();
   const slider = document.getElementById("property-slider");
   if (!slider) return;
@@ -59,7 +59,7 @@ var fetchPropertiesPage = async (page) => {
     '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/data?page=${page}`);
+    const res = await fetch(`/api/data?page=${page}`);
     const data = await res.json();
 
     if (window._searchActive) return;

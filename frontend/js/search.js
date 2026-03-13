@@ -73,7 +73,7 @@ async function fetchProperties(query, page) {
 
   try {
     const res = await fetch(
-      `http://127.0.0.1:8000/api/properties?s=${encodeURIComponent(query)}&page=${page}`,
+      `/api/properties?s=${encodeURIComponent(query)}&page=${page}`,
     );
     if (!res.ok) {
       const errorData = await res.json();
