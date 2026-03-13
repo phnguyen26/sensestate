@@ -4,7 +4,7 @@ var renderPropertySingle = async () => {
   console.log("Property ID:", propertyId);
 
   const res = await fetch(
-    "http://127.0.0.1:8000/api/properties/" + String(propertyId)
+    `/api/properties/${String(propertyId)}`
   );
   const property = await res.json();
 
