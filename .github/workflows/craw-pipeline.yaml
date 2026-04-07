@@ -42,4 +42,4 @@ jobs:
 
     - name: Run pipeline
       run: |
-        python pipeline/entry.py --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items }}
+        python -m pipeline/entry.py --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items }}
