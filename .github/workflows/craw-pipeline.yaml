@@ -17,7 +17,6 @@ on:
           - 'https://batdongsan.com.vn/ban-nha-mat-pho'
           - 'https://batdongsan.com.vn/ban-shophouse-nha-pho-thuong-mai'
           - 'https://batdongsan.com.vn/ban-trang-trai-khu-nghi-duong'
-    inputs:
       max-items:
         description: 'Maximum number of items to crawl'
         required: false
