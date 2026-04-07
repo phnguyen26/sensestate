@@ -35,11 +35,18 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Install Google Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+
+    - name: Install xvfb
+      run: sudo apt-get install -y xvfb
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run pipeline
-      run: |
+
         python -m pipeline.entry --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items }}
