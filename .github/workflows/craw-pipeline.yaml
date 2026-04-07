@@ -1,0 +1,46 @@
+name: Crawl Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Select the URL to crawl'
+        required: false
+        default: 'https://batdongsan.com.vn/nha-dat-ban'
+        type: choice
+        options:
+          - 'https://batdongsan.com.vn/nha-dat-ban'
+          - 'https://batdongsan.com.vn/ban-can-ho-chung-cu'
+          - 'https://batdongsan.com.vn/ban-can-ho-chung-cu-mini'
+          - 'https://batdongsan.com.vn/ban-nha-rieng'
+          - 'https://batdongsan.com.vn/ban-nha-biet-thu-lien-ke'
+          - 'https://batdongsan.com.vn/ban-nha-mat-pho'
+          - 'https://batdongsan.com.vn/ban-shophouse-nha-pho-thuong-mai'
+          - 'https://batdongsan.com.vn/ban-trang-trai-khu-nghi-duong'
+    inputs:
+      max-items:
+        description: 'Maximum number of items to crawl'
+        required: false
+        default: 10
+        type: number
+jobs:
+  craw:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run pipeline
+      run: |
+        python pipeline/entry.py --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items }}
