@@ -49,4 +49,6 @@ jobs:
         pip install -r requirements.txt
 
 
-        python -m pipeline.entry --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items }}
+    - name: Run crawler
+      run: |
+        xvfb-run python -m pipeline.entry --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items}}
