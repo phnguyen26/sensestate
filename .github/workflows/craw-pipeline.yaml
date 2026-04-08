@@ -50,5 +50,10 @@ jobs:
 
 
     - name: Run crawler
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        QDRANT_URL: ${{ secrets.QDRANT_URL }}
+        QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+        
       run: |
         xvfb-run python -m pipeline.entry --url ${{ github.event.inputs.url }} --max-items ${{ github.event.inputs.max-items}}
