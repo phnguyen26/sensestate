@@ -69,7 +69,7 @@ class CrawlStep(PipelineStep):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--start-maximized")
-        driver = uc.Chrome(options=options, version_main=147)
+        driver = uc.Chrome(options=options)
         try:
             while self.count < self.max_items:
                 if self.page_no > 1:
