@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import logging
 import json
 import os
+import re
 from qdrant_client import QdrantClient
 from qdrant_client import models
 
@@ -75,6 +76,8 @@ class CrawlStep(PipelineStep):
                     self.source_url = self.base_url + "/p" + str(self.page_no)
                 else:
                     self.source_url = self.base_url
+                pattern = r"(?<=com\.vn\/)([^\/]+)"
+                type  = re.search(pattern, self.source_url)
                 logger.info(f"Crawling data from {self.source_url}")
                 driver.get(self.source_url)
                 time.sleep(random() * 2 + 2)
@@ -90,6 +93,7 @@ class CrawlStep(PipelineStep):
                     )
                 )
 
+               
                 properties = []
                 for i, item in enumerate(items[: self.max_items - self.count]):
                     a_tag = item.find_element(
@@ -100,7 +104,7 @@ class CrawlStep(PipelineStep):
                         context.client, url, QDRANT_COLLECTION_NAME
                     ):
                         continue
-                    property_data = data_crawler(url, driver=driver)
+                    property_data = data_crawler(url, driver=driver, type = type)
                     properties.append(property_data)
                     self.count += 1
                     logger.info(f"Crawled item {self.count}/{self.max_items}")
