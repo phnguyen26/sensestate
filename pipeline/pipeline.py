@@ -77,7 +77,7 @@ class CrawlStep(PipelineStep):
                 else:
                     self.source_url = self.base_url
                 pattern = r"(?<=com\.vn\/)([^\/]+)"
-                type  = re.search(pattern, self.source_url)
+                type  = re.search(pattern, self.source_url).group()
                 logger.info(f"Crawling data from {self.source_url}")
                 driver.get(self.source_url)
                 time.sleep(random() * 2 + 2)
