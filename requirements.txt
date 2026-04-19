@@ -11,7 +11,7 @@ openai
 
 # Web Scraping
 selenium
-undetected-chromedriver
+undetected-chromedriver==3.5.5
 
 # Environment Variables
 python-dotenv
