@@ -66,6 +66,11 @@ def load_and_create_collection():
                 collection_name=QDRANT_CHUNKS_NAME,
                 vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
         )
+        client.create_payload_index(
+            collection_name=QDRANT_CHUNKS_NAME,
+            field_name="parent_id",
+            field_schema=models.PayloadSchemaType.INTEGER
+        )
         
     
     

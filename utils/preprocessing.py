@@ -7,7 +7,7 @@ splitter = RecursiveCharacterTextSplitter(
 )
 
 class Processed_Data:
-    def __init__(self, imgs, title, address, price, price_ext, price_unit, area, area_ext, description, direction, legal, url):
+    def __init__(self, imgs, title, address, price, price_ext, price_unit, area, area_ext, description, direction, legal, url, type, embedding=None):
         self.imgs = imgs
         self.title = title
         self.address = address
@@ -20,6 +20,8 @@ class Processed_Data:
         self.direction = direction
         self.legal = legal
         self.url = url
+        self.type = type
+        self.embedding = embedding
     
     def chunking(self) -> list[str]:
         
@@ -53,7 +55,7 @@ def preprocessing(data: Data) -> Processed_Data:
         new_price = float(0)
     area = data.area
     area= area.split('m²')
-    new_area = float(area[0].strip().replace('.', ''))
+    new_area = float(area[0].strip().replace(',', '.'))
     
     
     #Handle description
@@ -62,7 +64,7 @@ def preprocessing(data: Data) -> Processed_Data:
     if new_desc[0] == '\\': new_desc = new_desc[2:].strip()
     if new_desc[-2:] == '\\n' :new_desc = new_desc[:-2].strip()
     
-    return Processed_Data(new_imgs, data.title, data.address, new_price, data.price_ext, price_unit, new_area, data.area_ext, new_desc, data.direction, data.legal, data.url)
+    return Processed_Data(new_imgs, data.title, data.address, new_price, data.price_ext, price_unit, new_area, data.area_ext, new_desc, data.direction, data.legal, data.url, data.type)
 
 if __name__ == '__main__':
     pass

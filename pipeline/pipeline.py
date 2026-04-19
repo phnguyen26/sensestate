@@ -203,7 +203,6 @@ class DatabaseLoadStep(PipelineStep):
                     old_collection_size, old_collection_size + len(context.data)
                 )
             ]
-            vectors = [data.embedding for data in context.data]
             payloads = [
                 {k: v for k, v in data.__dict__.items() if k != "embedding"}
                 for data in context.data
@@ -223,7 +222,7 @@ class DatabaseLoadStep(PipelineStep):
 
             for parent_id, data in zip(parent_ids, context.data):
                 vectors = data.embedding
-                payloads = [{"parent_id": parent_id} for _ in range(len(vectors))]
+                payloads = [{"parent_id": parent_id, "chunk": text} for text in data.chunking()]
                 context.client.upsert(
                     collection_name=QDRANT_CHUNKS_NAME,
                     points=models.Batch(
