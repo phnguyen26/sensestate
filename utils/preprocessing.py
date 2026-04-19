@@ -1,10 +1,13 @@
 from utils.data_crawler import Data
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-
-
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=200, 
+    chunk_overlap=30
+)
 
 class Processed_Data:
-    def __init__(self, imgs, title, address, price, price_ext, price_unit, area, area_ext, description, direction, legal, url, embedding = None):
+    def __init__(self, imgs, title, address, price, price_ext, price_unit, area, area_ext, description, direction, legal, url):
         self.imgs = imgs
         self.title = title
         self.address = address
@@ -17,14 +20,12 @@ class Processed_Data:
         self.direction = direction
         self.legal = legal
         self.url = url
-        self.embedding = embedding
     
-    def synthesis(self):
+    def chunking(self) -> list[str]:
+        
         new_desc = self.description
-        new_desc = new_desc.replace("\\n", " ")
-        new_desc = new_desc.replace("+", " ")
-        text =  'Mô tả ' + new_desc
-        return text
+        chunks = splitter.split_text(new_desc)
+        return chunks
     
     
 
@@ -52,7 +53,7 @@ def preprocessing(data: Data) -> Processed_Data:
         new_price = float(0)
     area = data.area
     area= area.split('m²')
-    new_area = float(area[0].strip().replace(',', '.'))
+    new_area = float(area[0].strip().replace('.', ''))
     
     
     #Handle description
