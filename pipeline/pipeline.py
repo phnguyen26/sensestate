@@ -2,13 +2,11 @@ from abc import ABC, abstractmethod
 from random import random
 import uuid
 import time
-from typing import List, Any, Optional
+from typing import List
 from dataclasses import dataclass, field
 import logging
-import json
 import os
 import re
-from qdrant_client import QdrantClient
 from qdrant_client import models
 
 import undetected_chromedriver as uc
@@ -222,14 +220,21 @@ class DatabaseLoadStep(PipelineStep):
 
             for parent_id, data in zip(parent_ids, context.data):
                 vectors = data.embedding
-                payloads = [{"parent_id": parent_id, "chunk": text} for text in data.chunking()]
+                texts = data.chunking()
                 context.client.upsert(
                     collection_name=QDRANT_CHUNKS_NAME,
-                    points=models.Batch(
-                        ids=[str(uuid.uuid4()) for _ in range(len(vectors))],
-                        vectors=vectors,
-                        payloads=payloads,
-                    ),
+                    points=[
+                        models.PointStruct(
+                            id=str(uuid.uuid4()),
+                            payload={"parent_id": parent_id, "chunk": text},
+                            vector={
+                                "dense": vector,
+                                "sparse": models.Document(
+                                    text=text,
+                                    model="Qdrant/bm25",
+                                ),  
+                            },
+                        ) for vector, text in zip(vectors, texts)]
                 )
 
             logger.info("Load successfully")

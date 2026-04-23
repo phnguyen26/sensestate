@@ -1,10 +1,13 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi import APIRouter
 from typing import Annotated
+from pydantic import BaseModel, Field
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
-from config.qdrant_config import QDRANT_COLLECTION_NAME, get_qdrant_client
+from config.qdrant_config import QDRANT_COLLECTION_NAME, get_qdrant_client, load_and_create_collection
+from rag import run_rag
+from utils.condition_builder import build_filter, create_parsing_prompt
 import os
 import json
 import time
@@ -12,74 +15,15 @@ import time
 router = APIRouter()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 qdrant_client = get_qdrant_client()
-
-CONDITION_MAP = {
-    "eq": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(gte=value, lte=value)
-    ),
-    "gt": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(gt=value)
-    ),
-    "gte": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(gte=value)
-    ),
-    "lt": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lt=value)
-    ),
-    "lte": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lte=value)
-    ),
-    "lte": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lte=value)
-    ),
-    "approx": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lte=value * 1.1, gte=value * 0.9)
-    ),
-}
+load_and_create_collection()
 
 
-def build_filter(parsed: dict) -> models.Filter | None:
-    condition = []
-    price = parsed.get("price")
-    area = parsed.get("area")
-    address = parsed.get("address")
-    price_unit = parsed.get("price_unit")
-    if price is not None:
-        price_cond = parsed.get("price_condition") or "eq"
-        condition.append(CONDITION_MAP[price_cond]("price", price))
-    if area is not None:
-        area_cond = parsed.get("area_condition") or "eq"
-        condition.append(CONDITION_MAP[area_cond]("area", area))
-    if address is not None:
-        condition.append(
-            models.FieldCondition(key="address", match=models.MatchText(text=address))
-        )
-    if price_unit is not None:
-        condition.append(
-            models.FieldCondition(
-                key="price_unit", match=models.MatchTextAny(text_any=price_unit)
-            )
-        )
-    if not condition:
-        return None
-    return models.Filter(must=condition)
 
 
-def create_prompt(s: str):
-    prompt = f"""
-    Parse the user's input into json format(just json, nothing else):
-    {{
-        "price": "export the price from the input, return float type, just the number, no trailing zeros, can be None",
-        "price_unit": "export the price unit from the input, such as 'tỷ', 'triệu/tháng', 'Thỏa thuận', return string type, can be None",
-        "price_condition": "export the price unit from the input, such as eq (for equal), gt (for greater than), approx (for approximate) and something like that, can be None, but can't none when the price existed",
-        "address": "export the address from the input, it should explicitly be city, district, street, if the address is 'thành phố hồ chí minh', just return 'hồ chí minh', return string type, can be None ",
-        "area": "export the area from the input, return float type, can be None",
-        "area_condition": "export the area unit from the input, such as eq (for equal), gt (for greater than) and something like that, can be None, but can't none when the area existed",
-        "main_content": "export the main content from the input, without including the price, area, must not be None, can be an empty string"
-    }}
-    User input: {s}
-    """
-    return prompt
+class RagRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+
+
 
 
 @router.get("/api/properties")
@@ -90,11 +34,11 @@ async def search(
 ):
     start_time = time.time()
     response = client.chat.completions.create(
-        model="gpt-5-mini",
+        model="gpt-5-nano",
         messages=[
             {
                 "role": "user",
-                "content": create_prompt(s),
+                "content": create_parsing_prompt(s),
             }
         ],
     )
@@ -175,3 +119,14 @@ def get_property(property_id: int):
     if not result:
         raise HTTPException(status_code=404, detail="Property not found")
     return result[0].payload
+
+
+@router.post("/api/rag")
+def rag_search(request: RagRequest):
+    try:
+        return run_rag(user_query=request.query)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"error": f"{type(e).__name__}: {str(e)}"},
+        )
