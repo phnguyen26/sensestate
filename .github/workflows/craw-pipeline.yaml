@@ -37,8 +37,6 @@ jobs:
 
     - name: Set up Google Chrome
       uses: browser-actions/setup-chrome@v2
-      with:
-        chrome-version: 147
 
   
     - name: Install xvfb
