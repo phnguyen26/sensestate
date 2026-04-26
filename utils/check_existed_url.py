@@ -12,7 +12,7 @@ def check_if_url_existed(client, url, collection_name):
         ),
         exact=True,
     )
-    return result.count == 1
+    return result.count > 0
 
 
 if __name__ == '__main__':

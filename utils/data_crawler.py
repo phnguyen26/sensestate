@@ -17,7 +17,7 @@ DESCRIPTION_ELEMENT = '.re__section-body.re__detail-content'
 IMG_ELEMENT = '.re__media-thumb-item'
 RESIZE = "/resize/200x200"
 class Data:
-    def __init__(self, imgs, title, address, price, price_ext, area, area_ext, description, direction, legal, url, embedding = None):
+    def __init__(self, imgs, title, address, price, price_ext, area, area_ext, description, direction, legal, url, type):
         self.imgs = imgs
         self.title = title
         self.address = address
@@ -28,9 +28,9 @@ class Data:
         self.description = description
         self.direction = direction
         self.legal = legal
-        self.embedding = embedding
         self.url = url
-def data_crawler(url, driver):
+        self.type = type
+def data_crawler(url, driver, type):
     driver.switch_to.new_window('tab')
     driver.get(url)
     body = WebDriverWait(driver, 15).until(
@@ -89,7 +89,7 @@ def data_crawler(url, driver):
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
 
-    return Data(imgs, title, address, price, price_ext, area, area_ext, description, direction, legal, url)
+    return Data(imgs, title, address, price, price_ext, area, area_ext, description, direction, legal, url, type)
 
 
 if __name__ == '__main__':

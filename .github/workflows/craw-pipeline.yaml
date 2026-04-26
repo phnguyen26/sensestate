@@ -35,11 +35,12 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install Google Chrome
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+    - name: Set up Google Chrome
+      uses: browser-actions/setup-chrome@v2
+      with:
+        chrome-version: 'latest'
 
+  
     - name: Install xvfb
       run: sudo apt-get install -y xvfb
 

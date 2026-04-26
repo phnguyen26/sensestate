@@ -1,4 +1,4 @@
-from config.qdrant_config import QDRANT_COLLECTION_NAME
+from config.qdrant_config import QDRANT_COLLECTION_NAME, QDRANT_CHUNKS_NAME
 from pipeline.pipeline import (
     Pipeline, CrawlStep, PreprocessStep, 
      EmbeddingStep, DatabaseLoadStep
@@ -33,7 +33,7 @@ def main():
     print(f"  - Crawled: {result.metadata.get('crawled_count', 0)} items")
     print(f"  - Processed: {result.metadata.get('processed_count', 0)} items")
     print(f"  - Embedding: Used {result.metadata.get('total_tokens', 0)} token in total")
-    print(f"  - Load to: {QDRANT_COLLECTION_NAME}")
+    print(f"  - Load to: {QDRANT_COLLECTION_NAME} and {QDRANT_CHUNKS_NAME}")
     print(f"  - Collection size: {result.metadata.get('collection_size', 0)}")
 
 

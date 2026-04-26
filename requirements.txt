@@ -11,7 +11,13 @@ openai
 
 # Web Scraping
 selenium
-undetected-chromedriver
+undetected-chromedriver==3.5.5
 
 # Environment Variables
 python-dotenv
+
+langchain==0.3.27
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3
+
