@@ -1,12 +1,15 @@
+import asyncio
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 from typing import Annotated
 from pydantic import BaseModel, Field
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from config.qdrant_config import QDRANT_COLLECTION_NAME, get_qdrant_client, load_and_create_collection
-from rag import run_rag
+from rag import run_rag, run_rag_stream
 from utils.condition_builder import build_filter, create_parsing_prompt
 import os
 import json
@@ -130,3 +133,36 @@ def rag_search(request: RagRequest):
             status_code=500,
             detail={"error": f"{type(e).__name__}: {str(e)}"},
         )
+
+
+@router.post("/api/rag/stream")
+def rag_search_stream(request: RagRequest):
+    try:
+        payload = run_rag_stream(user_query=request.query)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"error": f"{type(e).__name__}: {str(e)}"},
+        )
+
+    def event_stream():
+        answer_parts: list[str] = []
+        
+        for token in payload["answer_stream"]:
+            answer_parts.append(token)
+            yield json.dumps({"type": "token", "content": token}, ensure_ascii=False) + "\n"
+
+
+        yield json.dumps(
+            {"type": "done", "answer": "".join(answer_parts)},
+            ensure_ascii=False,
+        ) + "\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="application/x-ndjson", #newline delimited 
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )

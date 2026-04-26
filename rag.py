@@ -2,7 +2,7 @@ import json
 import os
 import re
 import time
-from typing import Any
+from typing import Any, Iterator
 
 from openai import OpenAI
 from qdrant_client.http import models
@@ -151,14 +151,14 @@ def retrieve_chunks(parsed: dict[str, Any]) -> list[dict[str, Any]]:
                 "chunk": payload.get("chunk"),
                 "parent_id": parent_id,
                 "content": {
-                    # "title": parent_payload.get("title"),
-                    # "address": parent_payload.get("address"),
-                    # "price": parent_payload.get("price"),
-                    # "price_unit": parent_payload.get("price_unit"),
-                    # "area": parent_payload.get("area"),
-                    "description": parent_payload.get("description"),
+                    "title": parent_payload.get("title"),
+                    "address": parent_payload.get("address"),
+                    "price": parent_payload.get("price"),
+                    "price_unit": parent_payload.get("price_unit"),
+                    "area": parent_payload.get("area"),
+                    # "description": parent_payload.get("description"),
                     "direction": parent_payload.get("direction", ""),
-                    "type": parent_payload.get("type")
+                    # "type": parent_payload.get("type")
                 }
             }
         )
@@ -194,6 +194,41 @@ def generate_answer(user_query: str, contexts: list[dict[str, Any]]) -> str:
     return (completion.choices[0].message.content or "").strip()
 
 
+def generate_answer_stream(
+    user_query: str,
+    contexts: list[dict[str, Any]],
+) -> Iterator[str]:
+    system_prompt = (
+        "You are a real-estate assistant. "
+        "Answer only from the provided retrieval contexts. "
+        "If context is insufficient, say you do not have enough information. "
+        "Always include brief source references using url when possible. The url should be http://127.0.0.1:8000/property-single.html?id= followed by the parent_id from the retrieval context. "
+        "Answer everything in Vietnamese"
+    )
+
+    user_prompt = (
+        f"User query: {user_query}\n\n"
+        f"Retrieved contexts (JSON): {json.dumps(contexts, ensure_ascii=True)}"
+    )
+
+    stream = openai_client.chat.completions.create(
+        model="gpt-4.1-nano",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        stream=True,
+    )
+
+    for chunk in stream:
+        if not chunk.choices:
+            continue
+        delta = chunk.choices[0].delta
+        content = getattr(delta, "content", None)
+        if content:
+            yield content
+
+
 def run_rag(user_query: str) -> dict[str, Any]:
     start_time = time.time()
     parsed = parse_query(user_query)
@@ -206,4 +241,19 @@ def run_rag(user_query: str) -> dict[str, Any]:
         "results": contexts,
         "answer": answer,
         "query_time": query_time,
+    }
+
+
+def run_rag_stream(user_query: str) -> dict[str, Any]:
+    start_time = time.time()
+    parsed = parse_query(user_query)
+    contexts = retrieve_chunks(parsed=parsed)
+    query_time = time.time() - start_time
+
+    return {
+        "query": user_query,
+        "parsed_input": parsed,
+        "results": contexts,
+        "query_time": query_time,
+        "answer_stream": generate_answer_stream(user_query=user_query, contexts=contexts),
     }
