@@ -60,6 +60,11 @@ def load_and_create_collection():
             field_name="url",
             field_schema=models.PayloadSchemaType.KEYWORD
         )
+        client.create_payload_index(
+            collection_name=QDRANT_COLLECTION_NAME,
+            field_name="type",
+            field_schema=models.PayloadSchemaType.KEYWORD
+        )
     if not client.collection_exists(QDRANT_CHUNKS_NAME):
         logger.info(f'Creating {QDRANT_CHUNKS_NAME} collection')
         client.create_collection(
