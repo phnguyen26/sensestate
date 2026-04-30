@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from utils.data_crawler import data_crawler
 from utils.preprocessing import preprocessing
 from utils.check_existed_url import check_if_url_existed
+from utils.get_chrome_driver import get_chrome_driver
 from config.qdrant_config import (
     load_and_create_collection,
     get_qdrant_client,
@@ -63,11 +64,7 @@ class CrawlStep(PipelineStep):
         self.page_no = page_no
 
     def process(self, context: PipelineContext) -> PipelineContext:
-        options = uc.ChromeOptions()
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--start-maximized")
-        driver = uc.Chrome(options=options)
+        driver = get_chrome_driver()
         try:
             while self.count < self.max_items:
                 if self.page_no > 1:
