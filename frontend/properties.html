@@ -30,6 +30,96 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/rag-chat.css" />
 
+    <style>
+
+      .property-filter-panel {
+        background: #f6f8fa;
+        border: 1px solid #d9e1ea;
+        border-radius: 14px;
+        padding: 20px;
+
+        /* max-width: 500px; */
+        width: 100%;
+        margin-left: auto;
+        margin-right: 0;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .filter-row:last-of-type {
+        margin-bottom: 0;
+      }
+
+      .filter-label {
+        flex: 0 0 120px;
+        font-weight: 600;
+        color: #2e3642;
+      }
+
+      .filter-fields {
+        flex: 1;
+      }
+
+      .filter-range-fields {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .filter-text-fields {
+        margin-right: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .filter-range-sep {
+        color: #5f6b7a;
+        font-weight: 500;
+      }
+
+      .filter-unit {
+        color: #2f3c4f;
+        font-weight: 600;
+        min-width: 32px;
+      }
+
+     
+
+      @media (max-width: 767px) {
+        .filter-row {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+
+        .filter-label {
+          flex: none;
+        }
+
+        .filter-range-fields {
+          flex-wrap: wrap;
+        }
+
+        .filter-range-fields .form-control {
+          min-width: 0;
+          flex: 1;
+        }
+
+        .filter-actions {
+          justify-content: stretch;
+        }
+
+        .filter-actions .btn {
+          flex: 1;
+        }
+      }
+    </style>
+
     <title>
       SenseState
     </title>
@@ -118,25 +208,125 @@
 
     <div class="section section-properties">
       <div class="container">
-        <div class="row mb-5 align-items-center">
-          <h2 class="col-lg-6 mb-5 font-weight-bold text-primary heading">
+        <div class="row mb-5">
+          <h2 class="col-lg-12 mb-4 font-weight-bold text-primary heading">
             Properties for you
           </h2>
-          <form
-            id="search-form"
-            action="#"
-            class="narrow-w form-search d-flex align-items-stretch col-lg-6 mb-5"
-            data-aos="fade-up"
-            data-aos-delay="200"
-          >
-            <input
-              id="search-input"
-              type="text"
-              class="form-control px-4"
-              placeholder="e.g. căn hộ 2 phòng ngủ quận 1 dưới 3 tỷ"
-            />
-            <button type="submit" class="btn btn-primary">Search</button>
-          </form>
+          <div class="col-lg-12" data-aos="fade-up" data-aos-delay="200">
+            <p class="text-end">
+              <a
+                class="btn btn-primary btn-sm"
+                data-bs-toggle="collapse"
+                href="#filter-collapse"
+                role="button"
+                aria-expanded="false"
+                aria-controls="filter-collapse"
+              >
+                <span class="icon-filter"></span>
+              </a>
+            </p>
+            <div class="collapse" id="filter-collapse">
+              <form id="search-form" action="#" class="property-filter-panel">
+                <div class="filter-row">
+                  <div class="filter-label">Type</div>
+                  <div class="filter-fields">
+                    <select
+                      id="type-input"
+                      class="form-select form-select-sm"
+                      aria-label="Property type"
+                    >
+                      <option value="">Tất cả</option>
+                      <option value="ban-can-ho-chung-cu">
+                        Bán căn hộ chung cư
+                      </option>
+                      <option value="ban-can-ho-chung-cu-mini">
+                        Bán căn hộ chung cư mini, căn hộ dịch vụ
+                      </option>
+                      <option value="ban-nha-rieng">Bán nhà riêng</option>
+                      <option value="ban-nha-biet-thu-lien-ke">
+                        Bán nhà biệt thự liền kề
+                      </option>
+                      <option value="ban-nha-mat-pho">Bán nhà mặt phố</option>
+                      <option value="ban-shophouse-nha-pho-thuong-mai">
+                        Bán shophouse, nhà phố thương mại
+                      </option>
+                      <option value="ban-trang-trai-khu-nghi-duong">
+                        Bán trang trại, khu nghỉ dưỡng
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="filter-row">
+                  <div class="filter-label">Price</div>
+                  <div class="filter-fields filter-range-fields">
+                    <input
+                      id="price-from"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      class="form-control form-control-sm"
+                      placeholder="From"
+                    />
+                    <span class="filter-range-sep">to</span>
+                    <input
+                      id="price-to"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      class="form-control form-control-sm"
+                      placeholder="To"
+                    />
+                    <span class="filter-unit">tỷ</span>
+                  </div>
+                </div>
+
+                <div class="filter-row">
+                  <div class="filter-label">Area</div>
+                  <div class="filter-fields filter-range-fields">
+                    <input
+                      id="area-from"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      class="form-control form-control-sm"
+                      placeholder="From"
+                    />
+                    <span class="filter-range-sep">to</span>
+                    <input
+                      id="area-to"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      class="form-control form-control-sm"
+                      placeholder="To"
+                    />
+                    <span class="filter-unit">m2</span>
+                  </div>
+                </div>
+
+                <div class="filter-row">
+                  <div class="filter-label">Address</div>
+                  <input
+                    id="address-input"
+                    type="text"
+                    class="form-control form-control-sm filter-text-fields"
+                    placeholder="Enter address keywords"
+                  />
+                  <button
+                    type="button"
+                    id="reset-filters"
+                    class="btn btn-outline-secondary btn-sm"
+                  >
+                    Reset
+                  </button>
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    Apply Filters
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
         <!-- <div class="col-lg-6 mb-5"> -->
 

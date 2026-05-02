@@ -1,16 +1,13 @@
-import asyncio
 
-from fastapi import FastAPI, HTTPException, Query
+
+from fastapi import Depends, HTTPException, Query
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from typing import Annotated
 from pydantic import BaseModel, Field
 from openai import OpenAI
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
 from config.qdrant_config import QDRANT_COLLECTION_NAME, get_qdrant_client, load_and_create_collection
-from rag import run_rag, run_rag_stream
-from utils.condition_builder import build_filter, create_parsing_prompt
+from rag import run_rag_stream
+from utils.condition_builder import build_filter
 import os
 import json
 import time
@@ -26,57 +23,42 @@ load_and_create_collection()
 class RagRequest(BaseModel):
     query: str = Field(min_length=1, max_length=500)
 
+class FilterParams(BaseModel):
+    price_from: float | None = Field(None, ge=0)
+    price_to: float | None = Field(None, ge=0)
+    area_from: float | None = Field(None, ge=0)
+    area_to: float | None = Field(None, ge=0)
+    price_unit: str | None = Field(None, max_length=50)
+    type: str | None = Field(None)
+    address: str | None = Field(None, max_length=200)
+    page: int = Field(1, ge=1)
+    limit: int = Field(9)
 
 
 
 @router.get("/api/properties")
-async def search(
-    s: Annotated[str, Query(title="search", max_length=100)],
-    page: int = Query(default=1, ge=1),
-    limit: int = Query(default=9, ge=1, le=50),
-):
-    start_time = time.time()
-    response = client.chat.completions.create(
-        model="gpt-5-nano",
-        messages=[
-            {
-                "role": "user",
-                "content": create_parsing_prompt(s),
-            }
-        ],
-    )
-    end_time = time.time()
-    parsed = json.loads(response.choices[0].message.content)
-
-    content = parsed.get("main_content")
-    embedding_response = client.embeddings.create(
-        model="text-embedding-3-small", input=content
-    )
-    query_vector = embedding_response.data[0].embedding
+async def filter(params: FilterParams = Depends()):
+    metadata_filter = build_filter(params.model_dump())
+    page, limit = params.page, params.limit
     try:
         result = qdrant_client.query_points(
             collection_name=QDRANT_COLLECTION_NAME,
-            query=query_vector,
-            query_filter=build_filter(parsed),
-            limit=limit+1,
+            limit=limit + 1,
             offset=(page - 1) * limit,
-            with_payload=True,
-            with_vectors=False,
+            query_filter=metadata_filter,
         )
         points = result.points
         has_more = len(points) > limit
         if has_more:
             points = points[:limit]
         return {
-            "query_time": end_time - start_time,
-            "parsed_input": parsed,
+            "filter": metadata_filter,
             "page": page,
             "limit": limit,
             "has_more": has_more,
             "results": [
                 {
                     "id": point.id,
-                    "score": point.score,
                     "payload": point.payload,
                 }
                 for point in points
@@ -85,7 +67,7 @@ async def search(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail={"error": f"{type(e).__name__}: {str(e)}", "parsed_input": parsed},
+            detail={"error": f"{type(e).__name__}: {str(e)}", "filter": metadata_filter},
         )
 
 
@@ -123,16 +105,6 @@ def get_property(property_id: int):
         raise HTTPException(status_code=404, detail="Property not found")
     return result[0].payload
 
-
-@router.post("/api/rag")
-def rag_search(request: RagRequest):
-    try:
-        return run_rag(user_query=request.query)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={"error": f"{type(e).__name__}: {str(e)}"},
-        )
 
 
 @router.post("/api/rag/stream")

@@ -8,49 +8,47 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 CONDITION_MAP = {
-    "eq": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(gte=value, lte=value)
+    "range": lambda key, range_from, range_to: models.FieldCondition(
+        key=key, range=models.Range(gte=range_from, lte=range_to)
     ),
-    "gt": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(gt=value)
+    "keyword": lambda key, value: models.FieldCondition(
+        key=key, match=models.MatchValue(value=value)
     ),
-    "gte": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(gte=value)
-    ),
-    "lt": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lt=value)
-    ),
-    "lte": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lte=value)
-    ),
-    "approx": lambda key, value: models.FieldCondition(
-        key=key, range=models.Range(lte=value * 1.1, gte=value * 0.9)
-    ),
+    "text": lambda key, value: models.FieldCondition(
+        key=key, match=models.MatchText(text=value)
+    )
 }
 
 
 def build_filter(parsed: dict) -> models.Filter | None:
     condition = []
-    price = parsed.get("price")
-    area = parsed.get("area")
     address = parsed.get("address")
     price_unit = parsed.get("price_unit")
-    if price is not None:
-        price_cond = parsed.get("price_condition") or "approx"
-        condition.append(CONDITION_MAP[price_cond]("price", price))
-    if area is not None:
-        area_cond = parsed.get("area_condition") or "approx"
-        condition.append(CONDITION_MAP[area_cond]("area", area))
+    property_type = parsed.get("type")
+    
+    price_from = parsed.get("price_from")
+    price_to = parsed.get("price_to")
+    condition.append(CONDITION_MAP["range"]("price", price_from, price_to))
+    
+    area_from = parsed.get("area_from", None)
+    area_to = parsed.get("area_to", None)
+    condition.append(CONDITION_MAP["range"]("area", area_from, area_to))
+
     if address is not None:
         condition.append(
-            models.FieldCondition(key="address", match=models.MatchText(text=address))
+            CONDITION_MAP["text"]("address", address)
         )
+
     if price_unit is not None:
         condition.append(
-            models.FieldCondition(
-                key="price_unit", match=models.MatchText(text=price_unit)
-            )
+            CONDITION_MAP["text"]("price_unit", price_unit)
         )
+
+    if property_type is not None:
+        condition.append(
+            CONDITION_MAP["keyword"]("type", property_type)
+        )
+
     if not condition:
         return None
     return models.Filter(must=condition)
@@ -62,10 +60,12 @@ def create_parsing_prompt(s: str):
     {{
         "price": "export the price from the input, return float type, just the number, no trailing zeros, can be None",
         "price_unit": "export the price unit from the input, such as 'tỷ', 'triệu/tháng', 'Thỏa thuận', return string type, can be None",
-        "price_condition": "export the price unit from the input, such as eq (for equal), gt (for greater than), approx (for approximate) and something like that, can be None, but can't none when the price existed",
+        "price_from": "export the minimum price from the input, return float type, can be None",
+        "price_to": "export the maximum price from the input, return float type, can be None",
         "address": "export the address from the input, it should explicitly be city, district, street, if the address is 'thành phố hồ chí minh', just return 'hồ chí minh', return string type, can be None ",
         "area": "export the area from the input, return float type, can be None",
-        "area_condition": "export the area unit from the input, such as eq (for equal), gt (for greater than) and something like that, can be None, but can't none when the area existed",
+        "area_from": "export the minimum area from the input, return float type, can be None",
+        "area_to": "export the maximum area from the input, return float type, can be None",
         "main_content": "export the main content from the input, without including the price, area, must not be None, can be an empty string"
     }}
     User input: {s}

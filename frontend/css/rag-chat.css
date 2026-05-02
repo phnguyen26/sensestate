@@ -66,7 +66,7 @@ body.rag-chat-open .rag-chat-page-shell {
   border: none;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, var(--rag-chat-accent), var(--rag-chat-accent-2));
+  background: #ffffff url("../images/blover.jpg") center / cover no-repeat;
   box-shadow: var(--rag-chat-shadow);
   display: inline-flex;
   align-items: center;

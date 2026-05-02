@@ -13,7 +13,7 @@
   root.className = "rag-chat-root";
   root.innerHTML = `
     <button class="rag-chat-overlay" type="button"></button>
-    <button class="rag-chat-toggle" type="button" title="Chat với AI">AI</button>
+    <button class="rag-chat-toggle" type="button" title="Chat với AI" aria-label="Chat với AI"></button>
     <section class="rag-chat-panel">
       <header class="rag-chat-header">
         <div class="rag-chat-header-row">
@@ -201,7 +201,7 @@
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.href = normalizeAssistantHref(href);
-      link.textContent = "Chi tiết";
+      link.textContent = label;
       targetEl.appendChild(link);
 
       lastIndex = startIndex + rawMatch.length;
@@ -222,23 +222,9 @@
       return "#";
     }
 
-    try {
-      const parsed = new URL(safeHref, window.location.href);
-      if (parsed.pathname.endsWith("/property-single.html") || parsed.pathname === "property-single.html") {
-        const id = parsed.searchParams.get("id");
-        if (id !== null) {
-          return `property-single.html?id=${encodeURIComponent(id)}`;
-        }
-        return "property-single.html";
-      }
-    } catch {
-      if (safeHref.includes("property-single.html")) {
-        const idMatch = safeHref.match(/[?&]id=([^&#]+)/);
-        if (idMatch && idMatch[1]) {
-          return `property-single.html?id=${encodeURIComponent(idMatch[1])}`;
-        }
-        return "property-single.html";
-      }
+    const idMatch = safeHref.match(/\?id=(\d+)/);
+    if (idMatch && idMatch[1]) {
+      return `property-single.html?id=${encodeURIComponent(idMatch[1])}`;
     }
 
     return safeHref;
@@ -315,25 +301,6 @@
 
     const sources = extractSources(meta?.results || []);
     return { answer: finalAnswer, sources };
-  }
-
-  async function fallbackNonStreaming(query, textEl) {
-    const response = await fetch("/api/rag", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query }),
-    });
-
-    if (!response.ok) {
-      const detail = await readErrorBody(response);
-      throw new Error(detail || "Fallback request failed");
-    }
-
-    const data = await response.json();
-    setMessageText(textEl, data.answer || "");
-    return { answer: data.answer || "", sources: extractSources(data.results || []) };
   }
 
   async function readErrorBody(response) {
